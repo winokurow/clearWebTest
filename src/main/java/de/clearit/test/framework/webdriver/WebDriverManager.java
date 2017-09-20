@@ -4,8 +4,6 @@ import java.net.URL;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.log4j.Logger;
-import org.openqa.selenium.Dimension;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 import de.clearit.test.data.Browser;
@@ -85,7 +83,7 @@ public final class WebDriverManager
       boolean result = false;
       if (webDriver instanceof WebDriverWrapper)
       {
-         result = ((WebDriverWrapper) webDriver).isClosedOrQuit();
+         result = webDriver.isClosedOrQuit();
       }
       else
       {
@@ -109,7 +107,7 @@ public final class WebDriverManager
    {
       if (driver instanceof WebDriverWrapper)
       {
-         return ((WebDriverWrapper) driver).getBrowser();
+         return driver.getBrowser();
       }
       return Browser.FIREFOX;
    }
@@ -138,6 +136,11 @@ public final class WebDriverManager
          System.setProperty("webdriver.ie.driver", iePath);
          driver = IEWebDriverCreator.createIEWebDriver(url, local, useNoProxy, seleniumGridUrl);
 	     break;
+      case CHROME:
+          String chromePath = properties.getProperty("webdriver.chromedriver.path");
+          System.setProperty("webdriver.chrome.driver", chromePath);
+          driver = ChromeWebDriverCreator.createChromeWebDriver(url, local, useNoProxy, seleniumGridUrl);
+ 	     break;
       default:
          String firefox = properties.getProperty("webdriver.geckodriver.path");
          System.setProperty("webdriver.gecko.driver", firefox);
@@ -170,7 +173,7 @@ public final class WebDriverManager
    {
       if (webDriver instanceof WebDriverWrapper)
       {
-         logger.info(((WebDriverWrapper) webDriver).getBrowserInfo() + " geschlossen.");
+         logger.info(webDriver.getBrowserInfo() + " geschlossen.");
       }
    }
 

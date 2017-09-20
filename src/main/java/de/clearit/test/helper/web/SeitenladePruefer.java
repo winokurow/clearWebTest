@@ -12,8 +12,6 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import com.google.common.base.Predicate;
-
 import de.clearit.test.common.DauerStringUtils;
 import de.clearit.test.common.TestUtils;
 import de.clearit.test.framework.WebPropertyManager;
@@ -95,7 +93,7 @@ public class SeitenladePruefer
       long startTimeMillis = System.currentTimeMillis();
       try
       {
-         //waitForPageIsReady();
+         waitForPageIsReady();
          waitForAjaxIndicatorInvisibility(timeoutInSeconds); // ajax indicator zuerst prüfen, da er früher erscheint
          //waitForBlockUiReady();
          waitForAjaxIndicatorInvisibility(timeoutInSeconds); // ajax indicator nochmal prüfen, falls der erste
@@ -144,19 +142,17 @@ public class SeitenladePruefer
     */
    public void waitForPageIsReady()
    {
-      final ExpectedCondition<Boolean> expectation = new ExpectedCondition<Boolean>()
-      {
-         @Override
-         public Boolean apply(final WebDriver driver)
-         {
-        	 String result = (String) ((JavascriptExecutor) driver).executeScript("return document.readyState");
-        	 logger.info(result);
-            return result.equals("complete");
-         }
-      };
+	      ExpectedCondition<Boolean> expectation = new
+	              ExpectedCondition<Boolean>() {
+	                  @Override
+					public Boolean apply(WebDriver driver) {
+	                      return ((JavascriptExecutor) driver).executeScript("return document.readyState").toString().equals("complete");
+	                  }
+	              };
       
       final Wait<WebDriver> wait = new WebDriverWait(driver, timeoutInSeconds);
       wait.until(expectation);
+     
    }
 
    /**
