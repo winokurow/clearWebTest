@@ -22,8 +22,8 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import de.clearit.test.data.Browser;
 import de.clearit.test.framework.WebPropertyManager;
+import de.clearit.test.framework.data.Browser;
 
 /**
  * Hilfsmethoden, die WebDriver erweitern.

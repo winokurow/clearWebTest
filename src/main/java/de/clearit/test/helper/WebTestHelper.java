@@ -1,32 +1,27 @@
 package de.clearit.test.helper;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
-import org.apache.log4j.Logger;
-import org.openqa.selenium.By;
-import org.openqa.selenium.remote.RemoteWebDriver;
-import org.testng.Assert;
-import org.testng.Reporter;
+import org.openqa.selenium.Cookie;
 import org.testng.annotations.Listeners;
 
 import com.sun.jna.platform.win32.Netapi32Util.User;
 
-import de.clearit.test.common.BasisLogger;
 import de.clearit.test.common.ScreenshotCreator;
 import de.clearit.test.common.TestUtils;
-import de.clearit.test.data.Browser;
 import de.clearit.test.exceptions.AllgemeineTechnischeException;
 import de.clearit.test.framework.AllTestListenerAdapters;
 import de.clearit.test.framework.ExecutionTimer;
 import de.clearit.test.framework.ExecutionTimerManager;
-import de.clearit.test.framework.WebPropertyManager;
 import de.clearit.test.framework.WebDriverCleanUp;
 import de.clearit.test.framework.WebDriverHolder;
+import de.clearit.test.framework.WebPropertyManager;
+import de.clearit.test.framework.data.Browser;
 import de.clearit.test.framework.webdriver.WebDriverManager;
+import de.clearit.test.framework.webdriver.WebDriverSettings;
 import de.clearit.test.framework.webdriver.WebDriverWrapper;
 
 
@@ -43,6 +38,8 @@ import de.clearit.test.framework.webdriver.WebDriverWrapper;
 public class WebTestHelper extends BaseTestHelper implements WebDriverHolder, WebDriverCleanUp
 {
 
+	private static String DEFAULT_VALUE = "false";
+	   
    /** Webdriver Instance. */
    protected WebDriverWrapper driver;
 
@@ -90,8 +87,9 @@ public class WebTestHelper extends BaseTestHelper implements WebDriverHolder, We
     *           - ob IE
     * @param url
     *           - URL der Anwendung
+ * @return 
     */
-   protected void erzeugeNeuenDriver(String url, Browser browser)
+   public WebDriverWrapper erzeugeNeuenDriver(String url, Browser browser)
    {
 
       // initialize Execution Timer
@@ -104,13 +102,15 @@ public class WebTestHelper extends BaseTestHelper implements WebDriverHolder, We
 
       String grid = getProperties().getProperty("seleniumgrid.url");
       String gridHint = "Service Grid";
-
-      driver = WebDriverManager.createDriver(grid, gridHint, browser, url);
+      WebDriverSettings webDriverSettings = new WebDriverSettings.WebDriverSettingsBuilder(url, isLocal(), browser).setGridHint(gridHint).setSeleniumGridUrl(grid).setCookies(new HashSet<Cookie>()).build();
+      driver = WebDriverManager.startDriver(webDriverSettings);
       driversBeingUsedInTest.add(driver);
       aktiviereDynatraceMessung(driver);
+      return driver;
    }
 
-   public String getProperty(String key)
+   @Override
+public String getProperty(String key)
    {
       return getProperties().getProperty(key);
    }
@@ -179,4 +179,11 @@ public void stopWebDrivers() {
 	
 }
 
+
+private static boolean isLocal()
+{
+   final String remote = System.getProperty("remote", DEFAULT_VALUE);
+   final boolean isLocal = remote.equals(DEFAULT_VALUE);
+   return isLocal;
+}
 }

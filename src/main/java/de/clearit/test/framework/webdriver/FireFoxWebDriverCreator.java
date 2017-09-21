@@ -4,7 +4,7 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 
-import org.openqa.selenium.Dimension;
+import org.openqa.selenium.Cookie;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.Proxy;
 import org.openqa.selenium.Proxy.ProxyType;
@@ -38,20 +38,12 @@ public final class FireFoxWebDriverCreator
    /**
     * Create Firefox WebDriver.
     * 
-    * @param url
-    *           - base url
-    * @param useNoProxy
-    *           - ob Proxy benutzt wird
-    * @param local
-    *           - ob lokal Treiber benutzt wird
-    * @param seleniumGridUrl
-    *           - Selenium Grid url
+    * @param webDriverSettings - WebDriver Einstellungen
     * 
     * @return das Treiber
     * @throws URISyntaxException
     */
-   protected static RemoteWebDriver createFirefoxWebDriver(String url, final boolean useNoProxy, final boolean local,
-         final String seleniumGridUrl)
+   protected static RemoteWebDriver createFirefoxWebDriver(WebDriverSettings webDriverSettings)
    {
       RemoteWebDriver driver;
       WebPropertyManager properties = WebPropertyManager.getInstance();
@@ -65,7 +57,7 @@ public final class FireFoxWebDriverCreator
       profile.setAssumeUntrustedCertificateIssuer(false);
       final DesiredCapabilities capabilities = DesiredCapabilities.firefox();
 
-      if (useNoProxy)
+      if (webDriverSettings.isUseNoProxy())
       {
          capabilities.setCapability(CapabilityType.PROXY, new Proxy().getNoProxy());
       }
@@ -75,7 +67,7 @@ public final class FireFoxWebDriverCreator
 
       }
 
-      if (local)
+      if (webDriverSettings.isLocal())
       {
          // capabilities.setCapability("marionette", true);
          capabilities.setCapability(CapabilityType.ACCEPT_SSL_CERTS, true);
@@ -88,16 +80,20 @@ public final class FireFoxWebDriverCreator
          capabilities.setPlatform(Platform.WINDOWS);
          capabilities.setVersion("39");
          capabilities.setCapability(FirefoxDriver.PROFILE, profile);
-         driver = new RemoteWebDriver(UrlCreator.createURL(seleniumGridUrl), capabilities);
+         driver = new RemoteWebDriver(UrlCreator.createURL(webDriverSettings.getSeleniumGridUrl()), capabilities);
       }
 
       driver.manage().deleteAllCookies();
-      // TODO Workaround für Firefox < 44
-      //driver.manage().window().maximize();
+      if (!(webDriverSettings.getCookies().isEmpty()))
+      {
+    	  for(Cookie cookie : webDriverSettings.getCookies()) {
+    		  driver.manage().addCookie(cookie);
+    	  }
+      }
       
       driver.manage().timeouts().pageLoadTimeout(100, TimeUnit.SECONDS);
       driver.manage().timeouts().setScriptTimeout(50, TimeUnit.SECONDS);
-      driver.get(url);
+      driver.get(webDriverSettings.getUrl());
       return driver;
    }
 

@@ -3,7 +3,7 @@ package de.clearit.test.framework.listener;
 import org.testng.ITestResult;
 
 import de.clearit.test.common.TestUtils;
-import de.clearit.test.data.Browser;
+import de.clearit.test.framework.data.Browser;
 import de.clearit.test.helper.web.WebdriverUtils;
 
 public class IELocalCleanUpOnTestFinished extends BaseProjectTestListenerAdapter

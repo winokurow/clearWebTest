@@ -2,9 +2,11 @@ package de.clearit.test.framework.webdriver;
 
 import java.util.concurrent.TimeUnit;
 
+import org.openqa.selenium.Cookie;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.Proxy;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
@@ -30,24 +32,16 @@ public final class ChromeWebDriverCreator
     * Chrome Driver Instance erstellen<br>
     * Alle Einstellungen setzen<br>
     * 
-    * @param url
-    *           - test url.
-    * @param local
-    *           - ob auf lokalen Rechner ausgeführt werden.
-    * @param useNoProxy
-    *           - ob Proxy benutzt werden.
-    * @param seleniumGridUrl
-    *           - URL des Selenium Grid.
-    * 
+    * @param webDriverSettings - WebDriver Einstellungen
+    *           
     * @return WebDriver Instance
     */
-   protected static RemoteWebDriver createChromeWebDriver(final String url, final boolean local, boolean useNoProxy,
-         final String seleniumGridUrl)
+   protected static RemoteWebDriver createChromeWebDriver(WebDriverSettings webDriverSettings)
    {
       RemoteWebDriver driver;
       final DesiredCapabilities capabilities = DesiredCapabilities.chrome();
 
-      if (useNoProxy)
+      if (webDriverSettings.isUseNoProxy())
       {
          capabilities.setCapability(CapabilityType.PROXY, new Proxy().getNoProxy());
       }
@@ -57,18 +51,27 @@ public final class ChromeWebDriverCreator
       capabilities.setPlatform(Platform.ANY);
 
       
-      if (local)
+      if (webDriverSettings.isLocal())
       {
-         driver = new ChromeDriver(capabilities);
+    	  ChromeOptions options = new ChromeOptions();
+          //options.addExtensions(new File("src\test\resources\extensions\extension.crx"));
+    	  capabilities.setCapability(ChromeOptions.CAPABILITY, options);
+    	  driver = new ChromeDriver(capabilities);
       }
       else
       {
-         driver = new RemoteWebDriver(UrlCreator.createURL(seleniumGridUrl), capabilities);
+         driver = new RemoteWebDriver(UrlCreator.createURL(webDriverSettings.getSeleniumGridUrl()), capabilities);
       }
 
-      driver.get(url);
+      driver.get(webDriverSettings.getUrl());
 
       driver.manage().deleteAllCookies();
+      if (!(webDriverSettings.getCookies().isEmpty()))
+      {
+    	  for(Cookie cookie : webDriverSettings.getCookies()) {
+    		  driver.manage().addCookie(cookie);
+    	  }
+      }
       driver.manage().window().maximize();
       driver.manage().timeouts().pageLoadTimeout(100, TimeUnit.SECONDS);
       driver.manage().timeouts().setScriptTimeout(50, TimeUnit.SECONDS);
