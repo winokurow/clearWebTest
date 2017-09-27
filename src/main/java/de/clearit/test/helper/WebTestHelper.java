@@ -24,7 +24,6 @@ import de.clearit.test.framework.webdriver.WebDriverManager;
 import de.clearit.test.framework.webdriver.WebDriverSettings;
 import de.clearit.test.framework.webdriver.WebDriverWrapper;
 
-
 /**
  * <P>
  * Das abstrakte Elternklass für alle Tests.
@@ -35,155 +34,138 @@ import de.clearit.test.framework.webdriver.WebDriverWrapper;
  * @author Ilja Winokurow
  */
 @Listeners(AllTestListenerAdapters.class)
-public class WebTestHelper extends BaseTestHelper implements WebDriverHolder, WebDriverCleanUp
-{
+public class WebTestHelper extends BaseTestHelper implements WebDriverHolder, WebDriverCleanUp {
 
 	private static String DEFAULT_VALUE = "false";
-	   
-   /** Webdriver Instance. */
-   protected WebDriverWrapper driver;
 
-   /** Alle im test erzeugten Webdriver */
-   protected List<WebDriverWrapper> driversBeingUsedInTest = null;
+	/** Webdriver Instance. */
+	protected WebDriverWrapper driver;
 
-   /** Die Eigenschaften des Tests. */
-   protected WebPropertyManager properties;
+	/** Alle im test erzeugten Webdriver */
+	protected List<WebDriverWrapper> driversBeingUsedInTest = new ArrayList<>();
 
-   /** Angemeldete User. */
-   protected User user = null;
+	/** Die Eigenschaften des Tests. */
+	protected WebPropertyManager properties;
 
-   /** Einstellungen fuer die Performancevermessung der durchgefuehrten Tests mit Dynatrace **/
-   private DynatraceMessung dynatraceMessung;
+	/** Angemeldete User. */
+	protected User user = null;
 
-   /**
-    * Webdriver anhalten
-    */
-   protected void stopWebDriver()
-   {
-      stopWebDriver(driver);
-   }
+	/**
+	 * Einstellungen fuer die Performancevermessung der durchgefuehrten Tests
+	 * mit Dynatrace
+	 **/
+	private DynatraceMessung dynatraceMessung;
 
-   protected void stopWebDriver(WebDriverWrapper driver)
-   {
-      WebDriverManager.stopDriver(driver);
-      driversBeingUsedInTest.remove(driver);
-      this.driver = null;
-   }
+	/**
+	 * Webdriver anhalten
+	 */
+	protected void stopWebDriver() {
+		stopWebDriver(driver);
+	}
 
-   /**
-    * {@inheritDoc}
-    */
-   @Override
-   public WebDriverWrapper getWebDriver()
-   {
-      return driver;
-   }
+	protected void stopWebDriver(WebDriverWrapper driver) {
+		WebDriverManager.stopDriver(driver);
+		driversBeingUsedInTest.remove(driver);
+		this.driver = null;
+	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public WebDriverWrapper getWebDriver() {
+		return driver;
+	}
 
-   /**
-    * Zentrale Erzeugung eines neuen Drivers, die Driver instanz darf nur hier neu zugewiesen werden!
-    *
-    * @param isIE
-    *           - ob IE
-    * @param url
-    *           - URL der Anwendung
- * @return 
-    */
-   public WebDriverWrapper erzeugeNeuenDriver(String url, Browser browser)
-   {
+	/**
+	 * Zentrale Erzeugung eines neuen Drivers, die Driver instanz darf nur hier
+	 * neu zugewiesen werden!
+	 *
+	 * @param isIE
+	 *            - ob IE
+	 * @param url
+	 *            - URL der Anwendung
+	 * @return
+	 */
+	public WebDriverWrapper erzeugeNeuenDriver(String url, Browser browser) {
 
-      // initialize Execution Timer
-      if (ExecutionTimerManager.getExecutionTimer() == null)
-      {
-         executionTimer = new ExecutionTimer();
-         executionTimer.init(TestUtils.getMethodName());
-         ExecutionTimerManager.setExecutionTimer(executionTimer);
-      }
+		// initialize Execution Timer
+		if (ExecutionTimerManager.getExecutionTimer() == null) {
+			executionTimer = new ExecutionTimer();
+			executionTimer.init(TestUtils.getMethodName());
+			ExecutionTimerManager.setExecutionTimer(executionTimer);
+		}
 
-      String grid = getProperties().getProperty("seleniumgrid.url");
-      String gridHint = "Service Grid";
-      WebDriverSettings webDriverSettings = new WebDriverSettings.WebDriverSettingsBuilder(url, isLocal(), browser).setGridHint(gridHint).setSeleniumGridUrl(grid).setCookies(new HashSet<Cookie>()).build();
-      driver = WebDriverManager.startDriver(webDriverSettings);
-      driversBeingUsedInTest.add(driver);
-      aktiviereDynatraceMessung(driver);
-      return driver;
-   }
+		String grid = WebPropertyManager.getInstance().getProperty("seleniumgrid.url");
+		String gridHint = "Service Grid";
+		WebDriverSettings webDriverSettings = new WebDriverSettings.WebDriverSettingsBuilder(url, isLocal(), browser)
+				.setGridHint(gridHint).setSeleniumGridUrl(grid).setCookies(new HashSet<Cookie>()).build();
+		driver = WebDriverManager.startDriver(webDriverSettings);
+		driversBeingUsedInTest.add(driver);
+		aktiviereDynatraceMessung(driver);
+		return driver;
+	}
 
-   @Override
-public String getProperty(String key)
-   {
-      return getProperties().getProperty(key);
-   }
+	@Override
+	public String getProperty(String key) {
+		return getProperties().getProperty(key);
+	}
 
-   private WebPropertyManager getProperties()
-   {
-      if (properties == null)
-      {
-         throw new AllgemeineTechnischeException("Properties sind null. Start Test nicht aufgerufen?");
-      }
-      return properties;
-   }
+	private WebPropertyManager getProperties() {
+		if (properties == null) {
+			throw new AllgemeineTechnischeException("Properties sind null. Start Test nicht aufgerufen?");
+		}
+		return properties;
+	}
 
-   /**
-    * @param dateiname
-    *           ohne Endung
-    */
-   protected void screenshotErzeugen(String dateiname)
-   {
-      new ScreenshotCreator().takeScreenshot(getWebDriver(), dateiname);
-   }
+	/**
+	 * @param dateiname
+	 *            ohne Endung
+	 */
+	protected void screenshotErzeugen(String dateiname) {
+		new ScreenshotCreator().takeScreenshot(getWebDriver(), dateiname);
+	}
 
-  
+	/**
+	 * Initialisieren Dynatrace Messung
+	 *
+	 * @param clazz
+	 *            - die Testklasse
+	 * @param method
+	 *            - die Testmethode
+	 */
+	protected void initDynatraceMessung(Class clazz, Method method) {
+		dynatraceMessung = new DynatraceMessung(clazz.getName(), method.getName());
+	}
 
-   /**
-    * Initialisieren Dynatrace Messung
-    *
-    * @param clazz
-    *           - die Testklasse
-    * @param method
-    *           - die Testmethode
-    */
-   protected void initDynatraceMessung(Class clazz, Method method)
-   {
-      dynatraceMessung = new DynatraceMessung(clazz.getName(), method.getName());
-   }
+	protected void aktiviereDynatraceMessung(WebDriverWrapper driver) {
+		if (dynatraceMessung != null) {
+			dynatraceMessung.aktivieren(driver);
+		}
+	}
 
-   protected void aktiviereDynatraceMessung(WebDriverWrapper driver)
-   {
-      if (dynatraceMessung != null)
-      {
-         dynatraceMessung.aktivieren(driver);
-      }
-   }
+	protected void beendeDynatraceMessung() {
+		if (dynatraceMessung != null) {
+			dynatraceMessung.beenden();
+		}
+	}
 
-   protected void beendeDynatraceMessung()
-   {
-      if (dynatraceMessung != null)
-      {
-         dynatraceMessung.beenden();
-      }
-   }
+	@Override
+	public void stopWebDrivers() {
+		if (driversBeingUsedInTest == null) {
+			return;
+		}
+		List<WebDriverWrapper> driversToClose = new ArrayList<>(driversBeingUsedInTest);
+		for (WebDriverWrapper webDriverWrapper : driversToClose) {
+			stopWebDriver(webDriverWrapper);
+		}
+		driversBeingUsedInTest.clear();
 
-@Override
-public void stopWebDrivers() {
-    if (driversBeingUsedInTest == null)
-    {
-       return;
-    }
-    List<WebDriverWrapper> driversToClose = new ArrayList<>(driversBeingUsedInTest);
-    for (WebDriverWrapper webDriverWrapper : driversToClose)
-    {
-       stopWebDriver(webDriverWrapper);
-    }
-    driversBeingUsedInTest.clear();
-	
-}
+	}
 
-
-private static boolean isLocal()
-{
-   final String remote = System.getProperty("remote", DEFAULT_VALUE);
-   final boolean isLocal = remote.equals(DEFAULT_VALUE);
-   return isLocal;
-}
+	private static boolean isLocal() {
+		final String remote = System.getProperty("remote", DEFAULT_VALUE);
+		final boolean isLocal = remote.equals(DEFAULT_VALUE);
+		return isLocal;
+	}
 }

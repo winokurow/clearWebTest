@@ -100,9 +100,7 @@ public final class WebDriverManager {
 
 		WebDriverWrapper wrapper = new WebDriverWrapper(driver, webDriverSettings);
 
-		logger.info("Browser (" + (useNoProxy() ? "no Proxy" : "via Proxy") + ") "
-				+ (webDriverSettings.isLocal() ? "Lokaler" : "Remote/" + webDriverSettings.getGridHint())
-				+ " Rechner: '" + wrapper.getIpOfNode() + "'");
+		logger.info(wrapper.getBrowserInfo() + " gestartet.");
 		return wrapper;
 	}
 
